@@ -64,7 +64,7 @@
 
 (defn request
   "Execute the HTTP request using the node.js primitives"
-  [{:keys [request-method headers body with-credentials?] :as request}]
+  [{:keys [request-method headers body with-credentials? protocol] :as request}]
   (let [request-url (util/build-url request)
         method (or request-method :get)
         timeout (or (:timeout request) 0)
@@ -72,9 +72,10 @@
         _ (prn content-length)
         headers (util/build-headers (assoc headers "content-length" content-length))
         js-request (->node-req (assoc request :headers headers))
-        scheme (if (= (:scheme request) :https)
-                 https
-                 http)
+        scheme (or protocol
+                   (if (= (:scheme request) :https)
+                     https
+                     http))
         ;; This needs a stream abstraction!
         chunks-ch (chan)
         response-ch (chan)
